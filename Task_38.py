@@ -1,137 +1,49 @@
-def print_records(file_name: str):
-    with open(file_name, 'r', encoding='utf-8') as data:
-        for line in data:
-            print(*line.split(';'), end='')
-
-def input_records(file_name: str):
-    with open(file_name, 'r+', encoding='utf-8') as data:
-        record_id = 0
-        for line in data:
-            if line != '':
-                record_id = line.split(';', 1)[0]
-        print('Введите фамилию, имя, отчество, номер телефона через пробел')
-        line = f'{int(record_id) + 1};' + ';'.join(input().split()[:4]) + ';\n'
-        confirm = confirmation('добавление записи')
-        if confirm == 'y':
-            data.write(line)
+def show_txt():
+    """эта ф-ция показывает содержимое справочника"""
+    with open('phone_book.txt', 'r', encoding='utf-8') as file:
+        book = file.read()  # .split('\n')
+    return book
 
 
-def find_char():
-    print('Выберите характеристику:')
-    print('0 - id, 1 - фамилия, 2 - имя, 3 - отчество, 4 - номер, q - выйти')
-    char = input()
-    while char not in ('0', '1', '2', '3', '4', 'q'):
-        print('Введены неверные данные')
-        print('Выберите характеристику:')
-        print('0 - id, 1 - фамилия, 2 - имя, 3 - отчество, 4 - номер, q - выйти')
-        char = input()
-    if char != 'q':
-        inp = input('Введите значение\n')
-        return char, inp
+def new_txt():
+    """добавляет строку в справочник"""
+    with open('phone_book.txt', 'a', encoding='utf-8') as file:
+        file.write(input('Введите новую строку: ' + '\n'))
+
+
+def find_txt():
+    """Эта ф-ция ищет информацию в справочнике"""
+    with open('phone_book.txt', 'r', encoding='utf-8') as file:
+        book = file.read().split('\n')
+        temp = input('что ищем?: ')
+        for i in book:
+            if temp in i:
+                print(i)
+
+
+def delete_person(name):
+    """Удаляет данные"""
+    persons = read_data()
+    with open("phone_book.txt", "w", encoding="utf8") as file:
+        for person in persons:
+            if name != person:
+                file.write(person)
+
+
+
+while True:
+    mode = input('Выберите режим работы справочника' + '\n'
+                 + '0-поиск, 1-чтение файла, 2-добавление в файл, 3-удаление, 4-выход: ')
+    if mode == '1':
+        print(show_txt())
+    elif mode == '0':
+        find_txt()
+    elif mode == '2':
+        new_txt()
+    elif mode == '3':
+        name = input('кого удаляем?: ')
+        delete_person(name)
+    elif mode == '4':
+        break
     else:
-        return 'q', 'q'
-
-
-def find_records(file_name: str, char, condition):
-    if condition != 'q':
-        printed = False
-        with open(file_name, 'r', encoding='utf-8') as data:
-            for line in data:
-                if condition == line.split(';')[int(char)]:
-                    print(*line.split(';'))
-                    printed = True
-        if not printed:
-            print("Не найдено")
-        return printed
-
-
-def check_id_record(file_name: str, text: str):
-    decision = input(f'Вы знаете id записи которую хотите {text}? 1 - да, 2 - нет, q - выйти\n')
-    while decision not in ('1', 'q'):
-        if decision != '2':
-            print('Введены неверные данные')
-        else:
-            find_records(path, *find_char())
-        decision = input(f'Вы знаете id записи которую хотите {text}? 1 - да, 2 - нет, q - выйти\n')
-    if decision == '1':
-        record_id = input('Введите id, q - выйти\n')
-        while not find_records(file_name, '0', record_id) and record_id != 'q':
-            record_id = input('Введите id, q - выйти\n')
-        return record_id
-    return decision
-
-
-def confirmation(text: str):
-    confirm = input(f"Подтвердите {text} записи: y - да, n - нет\n")
-    while confirm not in ('y', 'n'):
-        print('Введены неверные данные')
-        confirm = input(f"Подтвердите {text} записи: y - да, n - нет\n")
-    return confirm
-
-
-def replace_record_line(file_name: str, record_id, replaced_line: str):
-    replaced = ''
-    with open(file_name, 'r', encoding='utf-8') as data:
-        for line in data:
-            replaced += line
-            if record_id == line.split(';', 1)[0]:
-                replaced = replaced.replace(line, replaced_line)
-    with open(file_name, 'w', encoding='utf-8') as data:
-        data.write(replaced)
-
-
-def change_records(file_name: str):
-    record_id = check_id_record(file_name, 'изменить')
-    if record_id != 'q':
-        replaced_line = f'{int(record_id)};' + ';'.join(
-            input('Введите фамилию, имя, отчество, номер телефона через пробел\n').split()[:4]) + ';\n'
-        confirm = confirmation('изменение')
-        if confirm == 'y':
-            replace_record_line(file_name, record_id, replaced_line)
-
-
-def delete_records(file_name: str):
-    record_id = check_id_record(file_name, 'удалить')
-    if record_id != 'q':
-        confirm = confirmation('удаление')
-        if confirm == 'y':
-            replace_record_line(file_name, record_id, '')
-
-
-path = 'phone_book.txt'
-
-try:                        # исключения try/except/finally
-    file = open(path, 'r')  # открыть файл
-except IOError:             # если нет файла он создается
-    print('Создан новый справочник -> phone_book.txt ')
-    file = open(path, 'w')
-finally:
-    file.close()
-
-actions = {'1': 'список',
-           '2': 'запись',
-           '3': 'поиск',
-           '4': 'изменение',
-           '5': 'удаление',
-           'q': 'выход'}
-
-action = None
-while action != 'q':
-    print('Какое действие хотите совершить?', *[f'{i} - {actions[i]}' for i in actions])
-    action = input()
-    while action not in actions:
-        print('Какое действие хотите совершить?', *[f'{i} - {actions[i]}' for i in actions])
-        action = input()
-        if action not in actions:
-            print('Введены неверные данные')
-    if action != 'q':
-        if action == '1':
-            print_records(path)
-        elif action == '2':
-            input_records(path)
-        elif action == '3':
-            find_records(path, *find_char())
-        elif action == '4':
-            change_records(path)
-        elif action == '5':
-            delete_records(path)
+        print('No mode')
